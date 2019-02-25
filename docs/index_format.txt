@@ -1,0 +1,42 @@
+lz4i index format
+=================
+
+An lz4i file contains an array with the starting positions of each block
+in an lz4 compressed file. With this array the position of the start block
+can be obtained directly without parsing and skipping blocks in the lz4
+file.
+
+The lz4i file is in combines a textual description of the data
+(in yaml) with the data itself in binary form, further called bym (binary
+yaml) format. bym files are thus selfdescriptive in the text part, which
+for lz4i files contains the following lines:
+
+#bym lz4i
+---
+name: lz4index
+version: 0.1
+type: array
+datatype: uint64
+byteorder: l
+usize: uncompressedsize
+binsize: binarysize
+#binary data follows
+...
+
+The first line is a yaml comment (starts with #) indicating the file type.
+The first 4 (magic) characters (#bym) indicate a bym format, the rest lz4i.
+This is followed by a yaml document (opening with --- and closing with ...)
+describing the data. bym format expects the fields name, version, type, datatype, 
+byteorder (l for little-endian and b for big-endian) and binsize (the size
+of the binary data) for the description of the data. lz4i has an extra
+field (usize) to indicate the original (uncompressed) size of the file.
+The document has some padding spaces (after the comment "# binaray data follows")
+so that the binary data is 8-byte aligned.
+
+The binary data following the yaml block is as described and array of 64
+bit little-endian integers.
+
+While bym supports multiple documents in a file by simple concatenation of
+the individual files (alternating yaml and binary), lzra expects the
+lz4index document to be the first in the file, and gives an error (lz4i
+error: only lz4index supported) if it is not.
