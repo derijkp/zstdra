@@ -1,6 +1,7 @@
 /bin/*
+/bin-ix86/*
 newfile
 /work/*
 /tests/tmp/*
 /zstd-ori/*
-/zstd-src
+

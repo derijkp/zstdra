@@ -4,7 +4,7 @@ ifndef ARCH
 endif
 BINDIR := $(PREFIX)/bin
 MANDIR := $(PREFIX)/share/man/man1
-ZSTDDIR := ../zstd-ori/zstd-1.3.8
+ZSTDDIR := ../zstd-ori/zstd-1.3.8$(ARCH)
 ZSTDLIB := $(ZSTDDIR)/lib
 ZSTDPROG := $(ZSTDDIR)/programs
 ZSTDSRCFILES := $(wildcard $(ZSTDLIB)/*.c) $(wildcard $(ZSTDPROG)/*.c)

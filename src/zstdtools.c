@@ -126,7 +126,7 @@ debug_printprogress(res,"readframe");
 		if (!zstd_readheader(res)) return(0);
 	} else if (res->frameread) return(1);
 	if (res->zfh.frameType == ZSTD_skippableFrame) {
-		fprintf(stderr,"error: trying to read skippable zstd frame at %zu",ftello(res->finput));
+		fprintf(stderr,"error: trying to read skippable zstd frame at %jd",ftello(res->finput));
 	}
 	res->bufferpos = res->inframepos;
 	res->lastblock = 0;
