@@ -55,6 +55,7 @@ int zstd_readheader(ZSTDres *res) {
 	}
 	res->framepos = res->framepos + res->contentsize;
 	res->frameread = 0;
+	res->framefilepos = ftell(res->finput);
 	error = fread(res->buffer, 1, ZSTD_FRAMEHEADERSIZE_MIN, res->finput);
 	if (error == 0 && feof(res->finput)) return(0);
 	if (error != ZSTD_FRAMEHEADERSIZE_MIN) ERROR("error in file: incomplete zstd frame header");

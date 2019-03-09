@@ -39,6 +39,7 @@ typedef struct zstdres {
 	unsigned long long contentsize;
 	unsigned long long framepos;
 	unsigned long long int inframepos;
+	unsigned long long framefilepos;
 	unsigned int frameread;
 	char *buffer;
 	unsigned int buffersize;

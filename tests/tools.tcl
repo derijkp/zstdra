@@ -20,7 +20,6 @@ proc test_cleantmp {} {
 		catch {file attributes $file -permissions ugo+xw}
 		catch {file delete -force $file}
 	}
-	cg indexclean
 }
 
 proc test_cleantmp_all {} {
@@ -28,7 +27,6 @@ proc test_cleantmp_all {} {
 		catch {file attributes $file -permissions ugo+xw}
 		catch {file delete -force $file}
 	}
-	cg indexclean
 }
 
 proc write_tab {file data {comment {}}} {

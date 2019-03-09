@@ -1,6 +1,6 @@
 #!/bin/sh
 # the next line restarts using wish \
-exec cg source "$0" "$@"
+exec tclsh "$0" "$@"
 
 source tools.tcl
 
@@ -105,6 +105,14 @@ test zstdra {multiple parts 8000000 4000000 500 1000} {
 	expected tmp/expected.txt 8000000 4000000 500 1000
 	file delete tmp/result.txt
 	exec ../bin/zstdra tmp/data.txt.zst 8000000 4000000 500 1000 > tmp/result.txt
+	exec diff tmp/result.txt tmp/expected.txt
+} {}
+
+test zstdra {0 500} {
+	test_cleantmp
+	expected tmp/expected.txt 0 500
+	file delete tmp/result.txt
+	exec ../bin/zstdra tmp/data.txt.zst 0 500 > tmp/result.txt
 	exec diff tmp/result.txt tmp/expected.txt
 } {}
 

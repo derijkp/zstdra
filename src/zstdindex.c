@@ -4,12 +4,10 @@ void zstdindex(char* filename) {
 	FILE *finput, *findex;
 	char *indexfile;
 	off64_t binsizepos, sizepos, framesizepos, start, binsize;
-	uint64_t pos, prevpos, framesize=0;
+	uint64_t framesize=0;
 	int lastblock = 0;
-	finput = fopen64_or_die(filename, "r");
-	ZSTDres *res=zstdopen(finput,NULL);
-	prevpos = ftello(finput);
 	indexfile = zstd_findindex(filename);
+	remove(indexfile);
 	findex = fopen(indexfile, "w+");
 	fprintf(findex,"#bym zsti\n");
 	fprintf(findex,"---\n");
@@ -33,6 +31,9 @@ void zstdindex(char* filename) {
 	}
 	fprintf(findex,"\n");
 	fprintf(findex,"...\n");
+	/* open zst file */
+	finput = fopen64_or_die(filename, "r");
+	ZSTDres *res=zstdopen(finput,NULL);
 	while (1) {
 		if (feof(res->finput)) break;
 		if (res->contentsize > 0) {
@@ -45,12 +46,10 @@ void zstdindex(char* filename) {
 				}
 				lastblock = 1;
 			}
-			DPRINT("pos:       %lld",(long long int)prevpos);
-			zstdindex_write(findex,prevpos);
+			DPRINT("pos:       %lld",(long long int)res->framefilepos);
+			zstdindex_write(findex,res->framefilepos);
 		}
-		prevpos = pos;
 		zstd_skipframe(res);
-		pos = ftello(finput);
 		zstd_readheader(res);
 	}
 	binsize = ftello(findex)-start;
