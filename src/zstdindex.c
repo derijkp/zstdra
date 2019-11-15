@@ -41,7 +41,7 @@ void zstdindex(char* filename) {
 				framesize = res->contentsize;
 			} else if (res->contentsize != framesize) {
 				if (lastblock) {
-					fprintf(stderr,"All frames (ecept last) must have the same contentsize for indexing (use e.g. zstd-mt -b 1 -T 1 to make this happen)");
+					fprintf(stderr,"All frames (except last) must have the same contentsize for indexing (use e.g. zstd-mt -b 1 -T 1 to make this happen)");
 					exit(1);
 				}
 				lastblock = 1;

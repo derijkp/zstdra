@@ -12,7 +12,6 @@ zstdra filename.zst ?start? ?size? ...
 
 DESCRIPTION
 -----------
-zstdra provides (pseudo) random access to files compressed using zstd-mt.
 zstdra can decompress an zst file starting from a given (uncompressed)
 position, and continue up to a given (uncompressed) size. The uncompressed
 data is sent to stdout. zstdra with only the filename as parameter will
@@ -23,14 +22,14 @@ Files should be compressed using zstd-mt (https://github.com/mcmilk/zstdmt/blob/
 rather than plain zstd because it compresses the file in equally sized
 (uncompressed) independent chunks that can be skipped or decompressed as
 needed, making the access to part of the data more efficient. You can
-specify the chunk size using the -b option; smaller values make for finer
+specify the chunk size (expressed in Mb) using the -b option; smaller values make for finer
 grained (and faster) random access but decrease compression efficienty a bit, e.g.
 a test file compressed with a chunck size of 1 was 0.015% smaller than one
 compressed with chunk size of 0.5.
 zstdra will work on default zstd compressed files, but not efficiently.
 
-For faster access, an index file (with the name filename.zst.zsti) can be
-made using:
+For even faster random access, an index file (with the name filename.zst.zsti)
+can be made using:
 zstdindex filename.zst
 The zsti file contains a list of the starting positions of the blocks in a
 binary format (prepended with a yaml header describing the binary data.
@@ -40,14 +39,14 @@ Making an index will fail on default zstd compressed files.
 
 BUILDING
 --------
-zstdra and zstdindex can be build by running make in the src directory.
-The make script expects a built zstd library in zstd-ori/zstd-1.3.8.
-The build directory contains scripts to build a widely compatible zstdra
-binary (build/hbb_make_zstdra.sh) and the required zstd library
-(build/hbb_make_zstd.sh) using the Holy Build Box environment
-(https://github.com/phusion/holy-build-box). The Holy Build Box requires
-docker to be installed and usable.
-After building, the zstdra and zstdindex binaries are in the directory bin.
+zstdra, zstdindex can be build by running make in the
+src directory. The build directory contains scripts to build a widely
+compatible zstdra binary (build/hbb_make_zstdra.sh) using the Holy Build
+Box environment (https://github.com/phusion/holy-build-box). The Holy
+Build Box requires docker to be installed and usable.
+It also builds a zstd-mt binary patched to go with a newer version of zstd
+(1.4.4) After building, the zstdra, zstdindex and zstd-mt binaries are in
+the directory bin.
 
 LICENSE
 -------

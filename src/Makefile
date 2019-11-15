@@ -7,7 +7,7 @@ MANDIR := $(PREFIX)/share/man/man1
 LIBZSTD=-Wl,-Bstatic -lzstd -Wl,-Bdynamic
 CLAGS_OPT ?= -O2
 
-CFLAGS += $(CLAGS_OPT) -D_FILE_OFFSET_BITS=64 -std=c99 -Wall -Wextra -Wundef -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -pedantic -DZSTD_VERSION=\"$(RELEASE)\"
+CFLAGS += $(CLAGS_OPT) -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wundef -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -pedantic -DZSTD_VERSION=\"$(RELEASE)\"
 FLAGS  := $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 
 # Define *.exe as extension for Windows systems

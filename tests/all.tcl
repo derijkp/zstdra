@@ -14,7 +14,14 @@ if {![file exists tmp/data.txt] || ![file exists tmp/data.txt.zst]} {
 		puts $f $i
 	}
 	close $f
-	exec zstd-mt -8 -T 1 -b 1 -f -k tmp/data.txt -o tmp/data.txt.zst
+	file delete tmp/data.txt.zst
+	exec ../bin/zstd-mt -8 -T 1 -b 1 -f -k tmp/data.txt -o tmp/data.txt.zst
+	set f [open tmp/small.txt w]
+	for {set i 1} {$i < 100} {incr i} {
+		puts $f $i
+	}
+	close $f
+	exec zstd -8 -T1 -B100 --rsyncable -q --no-progress -f -k tmp/small.txt -o tmp/small.txt.zst
 }
 file delete tmp/data.txt.zst.zsti
 
@@ -108,6 +115,22 @@ test zstdra {multiple parts 8000000 4000000 500 1000} {
 	exec diff tmp/result.txt tmp/expected.txt
 } {}
 
+test zstdra {small 10 10 10 10} {
+	test_cleantmp
+	expected tmp/expected.txt 10 10 10 10
+	file delete tmp/result.txt
+	exec ../bin/zstdra tmp/small.txt.zst 10 10 10 10 > tmp/result.txt
+	exec diff tmp/result.txt tmp/expected.txt
+} {}
+
+test zstdra {small 10 10 20 10} {
+	test_cleantmp
+	expected tmp/expected.txt 10 10 20 10
+	file delete tmp/result.txt
+	exec ../bin/zstdra tmp/small.txt.zst 10 10 20 10 > tmp/result.txt
+	exec diff tmp/result.txt tmp/expected.txt
+} {}
+
 test zstdra {0 500} {
 	test_cleantmp
 	expected tmp/expected.txt 0 500
@@ -152,7 +175,7 @@ test zstdindex {index 8000000 4000000} {
 	exec diff tmp/result.txt tmp/expected.txt
 } {}
 
-test zstdra {index multiple parts 8000000 4000000 500 1000} {
+test zstdra {indexed multiple parts 8000000 4000000 500 1000} {
 	test_cleantmp
 	expected tmp/expected.txt 8000000 4000000 500 1000
 	file delete tmp/result.txt
@@ -161,7 +184,7 @@ test zstdra {index multiple parts 8000000 4000000 500 1000} {
 	exec diff tmp/result.txt tmp/expected.txt
 } {}
 
-test zstdra {index multiple parts 0 100 8000000 1000} {
+test zstdra {indexed multiple parts 0 100 8000000 1000} {
 	test_cleantmp
 	expected tmp/expected.txt 0 100 8000000 1000
 	file delete tmp/result.txt
@@ -178,3 +201,22 @@ test zstdra {no size given} {
 	exec ../bin/zstdra tmp/data.txt.zst 30800000 > tmp/result.txt
 	exec diff tmp/result.txt tmp/expected.txt
 } {}
+
+test zstdra {indexed small 10 10 10 10} {
+	test_cleantmp
+	expected tmp/expected.txt 10 10 10 10
+	file delete tmp/result.txt
+	exec ../bin/zstdindex tmp/small.txt.zst 2>@ stdout
+	exec ../bin/zstdra tmp/small.txt.zst 10 10 10 10 > tmp/result.txt
+	exec diff tmp/result.txt tmp/expected.txt
+} {}
+
+test zstdra {indexed small 10 10 20 10 100 10} {
+	test_cleantmp
+	expected tmp/expected.txt 10 10 20 10 100 10
+	file delete tmp/result.txt
+	exec ../bin/zstdindex tmp/small.txt.zst 2>@ stdout
+	exec ../bin/zstdra tmp/small.txt.zst 10 10 20 10 100 10 > tmp/result.txt
+	exec diff tmp/result.txt tmp/expected.txt
+} {}
+

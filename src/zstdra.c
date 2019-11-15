@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2018-present, Peter De Rijk VIB/University of Antwerp
+ *
+ * This source code is licensed under the BSD-style license
+ */
+
 #include "zstdtools.h"
 
 void decompressra(ZSTDres *res,FILE *foutput,unsigned long long start,unsigned long long size) {
@@ -15,7 +21,7 @@ void decompressra(ZSTDres *res,FILE *foutput,unsigned long long start,unsigned l
 	while (1) {
 		if (size == 0) break;
 		if (res->contentsize > 0) {
-			zstd_readframe(res);
+			if (!res->frameread) zstd_readframe(res);
 			writebuffer = res->outbuffer + skip;
 			writesize = res->contentsize - skip;
 			skip = 0;

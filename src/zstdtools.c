@@ -46,9 +46,13 @@ void debug_printprogress(ZSTDres *res,char *msg) {
 }
 #endif
 
+ #define MIN_ZSTD_HEADERSIZE ZSTD_FRAMEHEADERSIZE_MIN(ZSTD_f_zstd1)
+// #define MIN_ZSTD_HEADERSIZE ZSTD_FRAMEHEADERSIZE_MIN
+
 /* returns contentsize, which is 0 for skippedframes */
 int zstd_readheader(ZSTDres *res) {
 	size_t error;
+	DPRINT("zstd_readheader ftel start:%ld",ftell(res->finput));
 	if (res->inframepos != 0 && res->frameread == 0) {
 		fprintf(stderr, "read or skip frame before reading header of new one\n");
 		exit(1);
@@ -56,17 +60,28 @@ int zstd_readheader(ZSTDres *res) {
 	res->framepos = res->framepos + res->contentsize;
 	res->frameread = 0;
 	res->framefilepos = ftell(res->finput);
-	error = fread(res->buffer, 1, ZSTD_FRAMEHEADERSIZE_MIN, res->finput);
+	error = fread(res->buffer, 1, MIN_ZSTD_HEADERSIZE, res->finput);
+	DPRINT("tel2:%ld",ftell(res->finput));
+	DPRINT("error:%lu",error);
+	DPRINT("MIN_ZSTD_HEADERSIZE:%d",MIN_ZSTD_HEADERSIZE);
 	if (error == 0 && feof(res->finput)) return(0);
-	if (error != ZSTD_FRAMEHEADERSIZE_MIN) ERROR("error in file: incomplete zstd frame header");
-	error = ZSTD_getFrameHeader(&(res->zfh), (const void*) res->buffer, ZSTD_FRAMEHEADERSIZE_MIN);
-	if (error > ZSTD_FRAMEHEADERSIZE_MIN) {
+	if (error != MIN_ZSTD_HEADERSIZE) ERROR("error in file: incomplete zstd frame header");
+	error = ZSTD_getFrameHeader(&(res->zfh), (const void*) res->buffer, MIN_ZSTD_HEADERSIZE);
+	DPRINT("ZSTD_getFrameHeader:%lu",error);
+	if (ZSTD_isError(error)) {
+		fprintf(stderr,"%s\n",ZSTD_getErrorName(error));
+		exit(1);
+	} else if (error > MIN_ZSTD_HEADERSIZE) {
 		res->inframepos = error;
-		READ(res->finput,res->inframepos-ZSTD_FRAMEHEADERSIZE_MIN,res->buffer+ZSTD_FRAMEHEADERSIZE_MIN,"could not read zstd header")
+		error = fread(res->buffer+MIN_ZSTD_HEADERSIZE, 1, res->inframepos-MIN_ZSTD_HEADERSIZE, res->finput);
+		DPRINT("tel3:%ld",ftell(res->finput));
+		DPRINT("fread:%ld",error);
+		if (error != res->inframepos-MIN_ZSTD_HEADERSIZE) ERROR("could not read zstd header");
 		error = ZSTD_getFrameHeader(&(res->zfh), (const void*) res->buffer, res->inframepos);
 	} else {
-		res->inframepos = ZSTD_FRAMEHEADERSIZE_MIN;
+		res->inframepos = MIN_ZSTD_HEADERSIZE;
 	}
+	DPRINT("tel4:%ld",ftell(res->finput));
 	if (ZSTD_isError(error)) {
 		fprintf(stderr,"error reading zstd frame header: %s\n",ZSTD_getErrorName(error));
 		exit(1);
@@ -80,6 +95,8 @@ int zstd_readheader(ZSTDres *res) {
 		exit(1);
 	}
 #ifdef DEBUG
+printf("contentsize:%lld\n",res->contentsize);
+printf("telend:%ld\n",ftell(res->finput));
 debug_printprogress(res,"readheader");
 #endif
 	return(res->contentsize);
@@ -123,9 +140,7 @@ int zstd_readframe(ZSTDres *res) {
 #ifdef DEBUG
 debug_printprogress(res,"readframe");
 #endif
-	if (res->inframepos == 0) {
-		if (!zstd_readheader(res)) return(0);
-	} else if (res->frameread) return(1);
+	if (res->frameread) return(1);
 	if (res->zfh.frameType == ZSTD_skippableFrame) {
 		fprintf(stderr,"error: trying to read skippable zstd frame at %jd",ftello(res->finput));
 	}
@@ -149,8 +164,32 @@ debug_printprogress(res,"readframe");
 		exit(1);
 	}
 	NODPRINT("numdecompressed: %d",numdecompressed);
-	res->currentpos += res->contentsize;
 	return(1);
+}
+
+#if defined (__cplusplus) || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */)
+# include <stdint.h>
+  typedef uint32_t U32;
+#else
+  typedef unsigned int        U32;
+#endif
+
+unsigned MEM_isLittleEndian(void)
+{
+    const union { U32 u; BYTE c[4]; } one = { 1 };   /* don't use static : performance detrimental  */
+    return one.c[0];
+}
+
+U32 MEM_read32(const void* memPtr) { return *(const U32*) memPtr; }
+U32 MEM_readLE32(const void* memPtr)
+{
+    if (MEM_isLittleEndian())
+        return MEM_read32(memPtr);
+    else
+    {
+        const BYTE* p = (const BYTE*)memPtr;
+        return (U32)((U32)p[0] + ((U32)p[1]<<8) + ((U32)p[2]<<16) + ((U32)p[3]<<24));
+    }
 }
 
 int zstd_skipframe(ZSTDres *res) {
@@ -161,25 +200,31 @@ debug_printprogress(res,"skipframe");
 		if (!zstd_readheader(res)) return(0);
 	}
 	if (res->zfh.frameType == ZSTD_skippableFrame) {
-		unsigned long long framesize = ZSTD_findFrameCompressedSize(res->buffer, res->inframepos);
+/*		size_t framesize = ZSTD_findFrameCompressedSize(res->buffer, res->inframepos);*/
+		/* on update to zstd1.4.4, ZSTD_findFrameCompressedSize got framesize wrong
+		 * just a quick hack to solve
+		*/
+		size_t framesize = 8 + MEM_readLE32((BYTE const*)res->buffer+4);
 		DPRINT("skip %llu of skippable frame at ftello: %zu ----",framesize - res->inframepos, ftello(res->finput));
 		fseeko(res->finput,framesize - res->inframepos,SEEK_CUR);
 		res->inframepos = 0;
 		res->frameread = 0;
 	} else {
-		DPRINT("skip frame at ftello: %zu ----",ftello(res->finput));
+		DPRINT("skip frame at ftello: %zu ----\n",ftello(res->finput));
 		res->bufferpos = res->inframepos;
 		res->lastblock = 0;
 		while (1) {
 			uint32_t blocksize;
 			blocksize = zstd_readblockheader(res);
 			if (!blocksize) break;
+			if (res->lastblock && res->zfh.checksumFlag) {
+				blocksize += 4;
+			}
 			fseeko(res->finput,blocksize,SEEK_CUR);
 			if (res->lastblock) break;
 		}
 		res->inframepos = 0;
 		res->frameread = 0;
-		res->currentpos += res->contentsize;
 	}
 	return(1);
 }
@@ -302,6 +347,7 @@ ZSTDres *zstd_openfile(char *file) {
 }
 
 int zstd_seek(ZSTDres *res, uint64_t pos, int where) {
+	DPRINT("zstd_seek: %lu where:%d\n",pos,where);
 	if (where == SEEK_SET) {
 	} else if (where == SEEK_CUR) {
 		pos = res->currentpos + pos;

@@ -16,7 +16,7 @@ append ::env(PATH) :$appdir/bin
 set env(SCRATCHDIR) [file dir [tempdir]]
 
 proc test_cleantmp {} {
-	foreach file [list_remove [glob -nocomplain tmp/*] tmp/data.txt tmp/data.txt.zst] {
+	foreach file [list_remove [glob -nocomplain tmp/*] tmp/data.txt tmp/data.txt.zst tmp/small.txt tmp/small.txt.zst] {
 		catch {file attributes $file -permissions ugo+xw}
 		catch {file delete -force $file}
 	}

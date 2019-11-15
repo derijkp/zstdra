@@ -51,12 +51,14 @@ set -x
 
 # Deps
 # ----
-if [ ! -f /build/zstd-1.3.8/lib/libzstd.a ] ; then
+if [ ! -f /build/zstd-1.4.4/lib/libzstd.a ] ; then
 	source /hbb_shlib/activate
 	cd /build
-	curl -O -L https://github.com/facebook/zstd/releases/download/v1.3.8/zstd-1.3.8.tar.gz
-	tar xvzf zstd-1.3.8.tar.gz
-	cd zstd-1.3.8
+	curl -O -L https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz
+	tar xvzf zstd-1.4.4.tar.gz
+	cd zstd-1.4.4
+	make
+	cd contrib/seekable_format/examples
 	make
 	source /hbb_exe/activate
 fi
@@ -67,8 +69,12 @@ if [ ! -f /build/zstdmt-0.6/programs/zstd-mt ] ; then
 	curl -o zstdmt-0.6.tar.gz -L https://github.com/mcmilk/zstdmt/archive/0.6.tar.gz
 	tar xvzf zstdmt-0.6.tar.gz
 	cd /build/zstdmt-0.6/programs
-	make loadsource
-	make zstd-mt
+	make clean
+	cp Makefile Makefile.ori
+	cp /io/build/adapted_Makefile_zstd-mt Makefile
+	CPATH="/build/zstd-1.4.4/lib:/build/zstd-1.4.4/lib/common:$CPATH" \
+		LIBRARY_PATH="/build/zstd-1.4.4/lib:$LIBRARY_PATH" \
+		make zstd-mt
 	source /hbb_exe/activate
 fi
 
@@ -85,6 +91,6 @@ if [ "$clean" = 1 ] ; then
 	make clean
 fi
 
-CPATH="/build/zstd-1.3.8/lib:/build/zstd-1.3.8/lib/decompress:/build/zstd-1.3.8/programs:$CPATH" LIBRARY_PATH="/build/zstd-1.3.8/lib:$LIBRARY_PATH" make
+CPATH="/build/zstd-1.4.4/lib:/build/zstd-1.4.4/lib/common:/build/zstd-1.4.4/lib/decompress:/build/zstd-1.4.4/programs:$CPATH" LIBRARY_PATH="/build/zstd-1.4.4/lib:$LIBRARY_PATH" make
 
 echo "Finished building zstdra"
