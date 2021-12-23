@@ -51,34 +51,44 @@ set -x
 
 # Deps
 # ----
-if [ ! -f /build/zstd-1.4.4/lib/libzstd.a ] ; then
+zstdversion=1.5.1
+if [ ! -f /build/zstd-$zstdversion/lib/libzstd.a ] ; then
 	source /hbb_shlib/activate
 	cd /build
-	curl -O -L https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz
-	tar xvzf zstd-1.4.4.tar.gz
-	cd zstd-1.4.4
+	curl -O -L https://github.com/facebook/zstd/releases/download/v$zstdversion/zstd-$zstdversion.tar.gz
+	tar xvzf zstd-$zstdversion.tar.gz
+	cd zstd-$zstdversion
 	make
 	cd contrib/seekable_format/examples
 	make
 	source /hbb_exe/activate
 fi
 
-if [ ! -f /build/zstdmt-0.6/programs/zstd-mt ] ; then
+zstdmtversion=0.8
+if [ ! -f /build/zstdmt-$zstdmtversion/programs/zstd-mt ] ; then
 	source /hbb_shlib/activate
 	cd /build
-	curl -o zstdmt-0.6.tar.gz -L https://github.com/mcmilk/zstdmt/archive/0.6.tar.gz
-	tar xvzf zstdmt-0.6.tar.gz
-	cd /build/zstdmt-0.6/programs
+	curl -o zstdmt-$zstdmtversion.tar.gz -L https://github.com/mcmilk/zstdmt/archive/v$zstdmtversion.tar.gz
+	tar xvzf zstdmt-$zstdmtversion.tar.gz
+	cd /build/zstdmt-$zstdmtversion/programs
+	if [ ! -f main.c.ori ] ; then
+		cp main.c main.c.ori
+	fi
+	cp /io/extern-src/zstdmt_main.c main.c
+	if [ ! -f Makefile.ori ] ; then
+		cp Makefile Makefile.ori
+	fi
+	cp /io/extern-src/adapted_Makefile_zstd-mt Makefile
 	make clean
-	cp Makefile Makefile.ori
-	cp /io/build/adapted_Makefile_zstd-mt Makefile
-	CPATH="/build/zstd-1.4.4/lib:/build/zstd-1.4.4/lib/common:$CPATH" \
-		LIBRARY_PATH="/build/zstd-1.4.4/lib:$LIBRARY_PATH" \
+	CPATH="/build/zstd-$zstdversion/lib:/build/zstd-$zstdversion/lib/common:$CPATH" \
+		LIBRARY_PATH="/build/zstd-$zstdversion/lib:$LIBRARY_PATH" \
 		make zstd-mt
+	rm -f /io/extern$ARCH/zstd-mt
+	strip zstd-mt
 	source /hbb_exe/activate
 fi
 
-cp /build/zstdmt-0.6/programs/zstd-mt /io/bin$ARCH
+cp /build/zstdmt-$zstdmtversion/programs/zstd-mt /io/bin$ARCH
 
 # Build
 # -----
@@ -91,6 +101,6 @@ if [ "$clean" = 1 ] ; then
 	make clean
 fi
 
-CPATH="/build/zstd-1.4.4/lib:/build/zstd-1.4.4/lib/common:/build/zstd-1.4.4/lib/decompress:/build/zstd-1.4.4/programs:$CPATH" LIBRARY_PATH="/build/zstd-1.4.4/lib:$LIBRARY_PATH" make
+CPATH="/build/zstd-$zstdversion/lib:/build/zstd-$zstdversion/lib/common:/build/zstd-$zstdversion/lib/decompress:/build/zstd-$zstdversion/programs:$CPATH" LIBRARY_PATH="/build/zstd-$zstdversion/lib:$LIBRARY_PATH" make
 
 echo "Finished building zstdra"

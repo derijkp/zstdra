@@ -21,6 +21,7 @@ if {![file exists tmp/data.txt] || ![file exists tmp/data.txt.zst]} {
 		puts $f $i
 	}
 	close $f
+	# creates only one frame, will/should work, but needs to decompress all, so is not faster
 	exec zstd -8 -T1 -B100 --rsyncable -q --no-progress -f -k tmp/small.txt -o tmp/small.txt.zst
 }
 file delete tmp/data.txt.zst.zsti
