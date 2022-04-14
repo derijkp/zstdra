@@ -8,7 +8,7 @@ BRO_VER	= "v1.0.9"
 LIZ_VER	= "v1.0"
 LZ4_VER	= "v1.9.2"
 LZ5_VER	= "v1.5"
-ZSTD_VER= "v1.5.1"
+ZSTD_VER= "v1.5.2"
 SNAP_VER= "v0.0.0"
 LZFSE_VER="lzfse-1.0"
 

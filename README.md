@@ -45,7 +45,7 @@ compatible zstdra binary (build/hbb_make_zstdra.sh) using the Holy Build
 Box environment (https://github.com/phusion/holy-build-box). The Holy
 Build Box requires docker to be installed and usable.
 It also builds a zstd-mt binary patched to go with a newer version of zstd
-(1.4.4) After building, the zstdra, zstdindex and zstd-mt binaries are in
+(1.5.2) After building, the zstdra, zstdindex and zstd-mt binaries are in
 the directory bin.
 
 LICENSE

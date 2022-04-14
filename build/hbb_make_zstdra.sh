@@ -51,14 +51,16 @@ set -x
 
 # Deps
 # ----
-zstdversion=1.5.1
+# when changing version, also change it in extern-src/adapted_Makefile_zstd-mt
+zstdversion=1.5.2
 if [ ! -f /build/zstd-$zstdversion/lib/libzstd.a ] ; then
 	source /hbb_shlib/activate
 	cd /build
 	curl -O -L https://github.com/facebook/zstd/releases/download/v$zstdversion/zstd-$zstdversion.tar.gz
 	tar xvzf zstd-$zstdversion.tar.gz
-	cd zstd-$zstdversion
+	cd /build/zstd-$zstdversion
 	make
+	sudo make install
 	cd contrib/seekable_format/examples
 	make
 	source /hbb_exe/activate
