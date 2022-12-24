@@ -5,9 +5,9 @@ endif
 BINDIR := $(PREFIX)/bin
 MANDIR := $(PREFIX)/share/man/man1
 LIBZSTD=-Wl,-Bstatic -lzstd -Wl,-Bdynamic
-CLAGS_OPT ?= -O2
+CFLAGS_OPT ?= -O2
 
-CFLAGS += $(CLAGS_OPT) -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wundef -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -pedantic -DZSTD_VERSION=\"$(RELEASE)\"
+CFLAGS += $(CFLAGS_OPT) -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wundef -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -pedantic -DZSTD_VERSION=\"$(RELEASE)\"
 FLAGS  := $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 
 # Define *.exe as extension for Windows systems
@@ -26,6 +26,10 @@ zstdra: zstdra.c zstdtools.c
 	$(CC) $(FLAGS) $^ -o ../bin$(ARCH)/$@$(EXT) $(LIBZSTD)
 
 zstdindex: zstdindex.c zstdtools.c
+	$(CC) $(FLAGS) $^ -o ../bin$(ARCH)/$@$(EXT) $(LIBZSTD)
+
+test: test.c zstdtools.c
+	echo "CPATH=$(CPATH)"
 	$(CC) $(FLAGS) $^ -o ../bin$(ARCH)/$@$(EXT) $(LIBZSTD)
 
 clean:

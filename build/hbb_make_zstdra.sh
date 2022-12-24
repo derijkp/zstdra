@@ -28,8 +28,10 @@ source "${dir}/start_hbb.sh"
 # ===============
 
 clean=1
+debug=0
 while [[ "$#" -gt 0 ]]; do case $1 in
 	-c|-clean|--clean) clean="$2"; shift;;
+	-d|-debug|--debug) debug="$2"; shift;;
 	*) echo "Unknown parameter: $1"; exit 1;;
 esac; shift; done
 
@@ -39,8 +41,6 @@ esac; shift; done
 echo "Entering Holy Build Box environment"
 
 # Activate Holy Build Box environment.
-# Tk does not compile with these settings (X)
-# only use HBB for glibc compat, not static libs
 source /hbb_exe/activate
 
 # print all executed commands to the terminal
@@ -103,6 +103,10 @@ if [ "$clean" = 1 ] ; then
 	make clean
 fi
 
-CPATH="/build/zstd-$zstdversion/lib:/build/zstd-$zstdversion/lib/common:/build/zstd-$zstdversion/lib/decompress:/build/zstd-$zstdversion/programs:$CPATH" LIBRARY_PATH="/build/zstd-$zstdversion/lib:$LIBRARY_PATH" make
+if [ "$debug" = 1 ] ; then
+	CFLAGS_OPT=-g CPATH="/build/zstd-$zstdversion/lib:/build/zstd-$zstdversion/lib/common:/build/zstd-$zstdversion/lib/decompress:/build/zstd-$zstdversion/programs:$CPATH" LIBRARY_PATH="/build/zstd-$zstdversion/lib:$LIBRARY_PATH" make
+else
+	CPATH="/build/zstd-$zstdversion/lib:/build/zstd-$zstdversion/lib/common:/build/zstd-$zstdversion/lib/decompress:/build/zstd-$zstdversion/programs:$CPATH" LIBRARY_PATH="/build/zstd-$zstdversion/lib:$LIBRARY_PATH" make
+fi
 
 echo "Finished building zstdra"
